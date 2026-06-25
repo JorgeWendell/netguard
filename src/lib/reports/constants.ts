@@ -1,0 +1,3 @@
+export const REPORT_MAX_AVAILABILITY_ROWS = 5_000;
+
+export const REPORT_MAX_SERVICE_ROWS = 5_000;
