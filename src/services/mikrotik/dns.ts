@@ -1,4 +1,8 @@
-import type { MikrotikRecord, MikrotikSession, MikrotikServiceData } from "./types";
+import type {
+  MikrotikRecord,
+  MikrotikSession,
+  MikrotikServiceData,
+} from "./types";
 import {
   getFirstRecord,
   mikrotikSetWithFallback,

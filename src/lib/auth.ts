@@ -32,12 +32,12 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     "http://localhost:3000",
-    "https://sispet.adelbr.tech",
+    "https://netguard.adelbr.tech",   
   ],
   baseURL:
     process.env.BETTER_AUTH_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
     (process.env.NODE_ENV === "production"
-      ? "https://sispet.adelbr.tech"
+      ? "https://netguard.adelbr.tech"
       : "http://localhost:3000"),
 });

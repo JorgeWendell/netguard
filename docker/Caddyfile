@@ -1,0 +1,4 @@
+netguard.adelbr.tech {
+	encode gzip zstd
+	reverse_proxy app:3000
+}

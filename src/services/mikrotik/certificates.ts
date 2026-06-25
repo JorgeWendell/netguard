@@ -85,7 +85,9 @@ export async function fetchCertificates(
 
   return records
     .map(mapCertificate)
-    .filter((certificate): certificate is CertificateData => certificate !== null)
+    .filter(
+      (certificate): certificate is CertificateData => certificate !== null,
+    )
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -105,10 +107,7 @@ async function importCertificateFile(
     : named;
 
   if (trusted !== undefined) {
-    variants.push([
-      ...namedWithPass,
-      `=trusted=${trusted ? "yes" : "no"}`,
-    ]);
+    variants.push([...namedWithPass, `=trusted=${trusted ? "yes" : "no"}`]);
   }
 
   variants.push(namedWithPass, named);
@@ -187,7 +186,9 @@ async function ensureCertificatesTrusted(
   name: string,
 ): Promise<void> {
   const certificates = await fetchCertificates(session);
-  const matches = certificates.filter((certificate) => certificate.name === name);
+  const matches = certificates.filter(
+    (certificate) => certificate.name === name,
+  );
 
   for (const certificate of matches) {
     if (!certificate.trusted) {
@@ -211,10 +212,7 @@ export async function importCertificate(
     trusted,
   );
 
-  if (
-    input.keyFileName &&
-    input.keyFileName !== input.certificateFileName
-  ) {
+  if (input.keyFileName && input.keyFileName !== input.certificateFileName) {
     const keyResult = await importCertificateFile(
       session,
       input.keyFileName,

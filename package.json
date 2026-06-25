@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "worker:mikrotik": "tsx src/workers/mikrotik.worker.ts"
+    "worker:mikrotik": "tsx src/workers/mikrotik.worker.ts",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.20",
