@@ -12,7 +12,7 @@ import type { MikrotikPollResult } from "@/services/mikrotik/types";
 
 import { persistDeviceInterfaces } from "./persist-interfaces";
 import { persistDeviceServices } from "./persist-services";
-import { persistDeviceWans } from "./persist-wans";
+import { persistDeviceWans, markDeviceWansOffline } from "./persist-wans";
 
 type PersistOptions = {
   recordMetrics?: boolean;
@@ -186,5 +186,7 @@ export async function persistOfflineDeviceData(
           updatedAt: now,
         },
       });
+
+    await markDeviceWansOffline(tx, deviceId, now);
   });
 }

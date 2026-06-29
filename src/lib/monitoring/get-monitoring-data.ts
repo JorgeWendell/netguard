@@ -106,22 +106,30 @@ export async function getMonitoringData(): Promise<MonitoringRow[]> {
 
   const wansByDevice = new Map<string, MonitoringWanLink[]>();
   const publicIpMap = new Map<string, string>();
+  const deviceOnlineMap = new Map(
+    devices.map((device) => [
+      device.deviceId,
+      device.statusOnline ?? device.deviceOnline,
+    ]),
+  );
 
   for (const wan of wans) {
     if (isVpnOrTunnelInterface(wan.interface)) {
       continue;
     }
 
+    const deviceOnline = deviceOnlineMap.get(wan.deviceId) ?? false;
+
     const list = wansByDevice.get(wan.deviceId) ?? [];
     list.push({
       interface: wan.interface,
-      online: wan.online ?? false,
-      latencyMs: wan.latencyMs,
+      online: deviceOnline ? (wan.online ?? false) : false,
+      latencyMs: deviceOnline ? wan.latencyMs : null,
       publicIp: wan.publicIp,
     });
     wansByDevice.set(wan.deviceId, list);
 
-    if (!publicIpMap.has(wan.deviceId) && wan.publicIp) {
+    if (deviceOnline && !publicIpMap.has(wan.deviceId) && wan.publicIp) {
       publicIpMap.set(wan.deviceId, wan.publicIp);
     }
   }

@@ -34,10 +34,6 @@ export const createUserAction = actionClient
       email: parsedInput.email,
       emailVerified: true,
       isActive: parsedInput.isActive ?? true,
-      isAdmin: false,
-      modulePermissions: serializeModulePermissions(
-        createDefaultModulePermissions(["dashboard"]),
-      ),
       createdAt: now,
       updatedAt: now,
     });

@@ -63,3 +63,20 @@ export async function persistDeviceWans(
       ),
     );
 }
+
+export async function markDeviceWansOffline(
+  tx: DbTransaction,
+  deviceId: string,
+  now: Date,
+): Promise<void> {
+  await tx
+    .update(mikrotikWanTable)
+    .set({
+      online: false,
+      latencyMs: null,
+      packetLoss: null,
+      lastPingAt: now,
+      updatedAt: now,
+    })
+    .where(eq(mikrotikWanTable.deviceId, deviceId));
+}
