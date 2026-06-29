@@ -55,7 +55,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-netuser}:${POSTGRES_PASSWORD:-lucas120908}@db:5432/${POSTGRES_DB:-netguard}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Defina BETTER_AUTH_SECRET no arquivo .env}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-3L8AKwGUZa+VMTQc472p2FqT0UTyfNG8aBgAH+LfSMw=}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://netguard.adelbr.tech}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://netguard.adelbr.tech}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
