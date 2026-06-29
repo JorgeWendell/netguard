@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAction } from "next-safe-action/hooks";
@@ -128,7 +128,7 @@ export function DeviceForm({
   const setOpen = onOpenChange || setInternalOpen;
 
   const form = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceFormSchema),
+    resolver: zodResolver(deviceFormSchema) as Resolver<DeviceFormValues>,
     defaultValues,
   });
 

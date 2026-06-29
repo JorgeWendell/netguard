@@ -126,8 +126,8 @@ export function CompanyForm({
         form.reset(defaultValues);
         setOpen(false);
         window.dispatchEvent(new Event("company-changed"));
-      } else if (data?.error) {
-        toast.error(data.error);
+      } else if (data && "error" in data && data.error) {
+        toast.error(String(data.error));
       }
     },
     onError: ({ error }) => {
@@ -144,8 +144,8 @@ export function CompanyForm({
         form.reset();
         setOpen(false);
         window.dispatchEvent(new Event("company-changed"));
-      } else if (data?.error) {
-        toast.error(data.error);
+      } else if (data && "error" in data && data.error) {
+        toast.error(String(data.error));
       }
     },
     onError: ({ error }) => {

@@ -85,8 +85,8 @@ export function CompaniesTable() {
         fetchCompanies({});
         setDeleteDialogOpen(false);
         setCompanyToDelete(null);
-      } else if (data?.error) {
-        toast.error(data.error);
+      } else if (data && "error" in data && data.error) {
+        toast.error(String(data.error));
       }
     },
     onError: () => {

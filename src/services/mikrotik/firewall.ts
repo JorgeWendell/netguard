@@ -1,4 +1,4 @@
-import type { MikrotikRecord, MikrotikSession } from "../types";
+import type { MikrotikRecord, MikrotikSession } from "./types";
 
 export type NatRuleInput = {
   chain: "srcnat" | "dstnat";

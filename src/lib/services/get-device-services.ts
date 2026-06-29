@@ -75,7 +75,7 @@ export async function getDeviceServices(
     );
   }
 
-  return db
+  const rows = await db
     .select({
       id: mikrotikServicesTable.id,
       deviceId: mikrotikServicesTable.deviceId,
@@ -110,4 +110,10 @@ export async function getDeviceServices(
       asc(mikrotikDevicesTable.name),
       asc(mikrotikServicesTable.service),
     );
+
+  return rows.map((row) => ({
+    ...row,
+    enabled: row.enabled ?? false,
+    running: row.running ?? false,
+  }));
 }

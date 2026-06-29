@@ -381,7 +381,10 @@ export function FirewallTab({
             onClick={() => {
               setChainFilter(tab.id);
               if (tab.id !== "all") {
-                setCreateForm((current) => ({ ...current, chain: tab.id }));
+                setCreateForm((current) => ({
+                  ...current,
+                  chain: tab.id as FilterFormState["chain"],
+                }));
               }
             }}
           >
