@@ -57,6 +57,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-netuser}:${POSTGRES_PASSWORD:-lucas120908}@db:5432/${POSTGRES_DB:-netguard}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-3L8AKwGUZa+VMTQc472p2FqT0UTyfNG8aBgAH+LfSMw=}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://netguard.adelbr.tech}
+      DVR_ENCRYPTION_KEY: ${DVR_ENCRYPTION_KEY:-}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://netguard.adelbr.tech}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-info@adelbr.tech}

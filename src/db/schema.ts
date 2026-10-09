@@ -519,3 +519,95 @@ export const mikrotikConfigSnapshotsTable = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
 );
+
+export const dvrsTable = pgTable(
+  "dvrs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+
+    locationId: uuid("location_id")
+      .notNull()
+      .references(() => locationsTable.id, {
+        onDelete: "cascade",
+      }),
+
+    name: varchar("name", { length: 150 }).notNull(),
+
+    serialNumber: varchar("serial_number", { length: 100 }).notNull(),
+
+    ddns: varchar("ddns", { length: 255 }),
+
+    ip: varchar("ip", { length: 255 }),
+
+    httpPort: integer("http_port").default(80).notNull(),
+
+    rtspPort: integer("rtsp_port").default(554).notNull(),
+
+    username: varchar("username", { length: 100 }).notNull(),
+
+    passwordEncrypted: text("password_encrypted").notNull(),
+
+    model: varchar("model", { length: 150 }),
+
+    channelCount: integer("channel_count").default(0).notNull(),
+
+    online: boolean("online").default(false).notNull(),
+
+    lastSeen: timestamp("last_seen"),
+
+    lastCheckAt: timestamp("last_check_at"),
+
+    lastError: text("last_error"),
+
+    active: boolean("active").default(true).notNull(),
+
+    notes: text("notes"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    serialNumberIdx: uniqueIndex("dvrs_serial_number_idx").on(
+      table.serialNumber,
+    ),
+    locationIdx: index("dvrs_location_idx").on(table.locationId),
+    onlineIdx: index("dvrs_online_idx").on(table.online),
+  }),
+);
+
+export const dvrCamerasTable = pgTable(
+  "dvr_cameras",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+
+    dvrId: uuid("dvr_id")
+      .notNull()
+      .references(() => dvrsTable.id, {
+        onDelete: "cascade",
+      }),
+
+    channel: integer("channel").notNull(),
+
+    name: varchar("name", { length: 150 }).notNull(),
+
+    enabled: boolean("enabled").default(true).notNull(),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    dvrChannelIdx: uniqueIndex("dvr_cameras_dvr_channel_idx").on(
+      table.dvrId,
+      table.channel,
+    ),
+    dvrIdx: index("dvr_cameras_dvr_idx").on(table.dvrId),
+  }),
+);

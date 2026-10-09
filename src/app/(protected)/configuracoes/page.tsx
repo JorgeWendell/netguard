@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { Users, ChevronRight, Building2, MapPin, Router } from "lucide-react";
+import {
+  Users,
+  ChevronRight,
+  Building2,
+  MapPin,
+  Router,
+  Video,
+} from "lucide-react";
 
 const settingsLinks = [
   {
@@ -33,6 +40,14 @@ const settingsLinks = [
     iconColor: "text-violet-600 dark:text-violet-400",
     title: "Gestão de equipamentos",
     description: "Cadastro de roteadores MikroTik por local",
+  },
+  {
+    href: "/configuracoes/gestao-dvrs",
+    icon: Video,
+    iconBg: "bg-rose-100 dark:bg-rose-900/30",
+    iconColor: "text-rose-600 dark:text-rose-400",
+    title: "Gestão de DVRs",
+    description: "Cadastro de DVRs Intelbras e importação das câmeras",
   },
 ];
 
