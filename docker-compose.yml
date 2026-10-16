@@ -62,6 +62,10 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-info@adelbr.tech}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:-info@adelbr.tech}
+    # Mesmo DNS do worker: acesso remoto aos MKs usa *.sn.mynetname.net
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
       db:
         condition: service_healthy
@@ -93,6 +97,10 @@ services:
     container_name: netguard-worker
     restart: unless-stopped
     command: ["npm", "run", "worker:mikrotik"]
+    # Cloud DNS MikroTik (*.sn.mynetname.net) falha no DNS embutido do Docker
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-netuser}:${POSTGRES_PASSWORD:-lucas120908}@db:5432/${POSTGRES_DB:-netguard}

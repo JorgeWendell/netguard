@@ -4,6 +4,7 @@ import { Readable, Writable } from "stream";
 
 import { Client as FtpClient } from "basic-ftp";
 
+import { resolveMikrotikHost } from "./connect";
 import type { MikrotikDeviceCredentials } from "./types";
 
 export async function uploadViaFtpToDevice(
@@ -12,10 +13,11 @@ export async function uploadViaFtpToDevice(
   buffer: Buffer,
 ): Promise<void> {
   const client = new FtpClient(20_000);
+  const host = await resolveMikrotikHost(credentials.host);
 
   try {
     await client.access({
-      host: credentials.host,
+      host,
       user: credentials.username,
       password: credentials.password,
       secure: false,
@@ -33,10 +35,11 @@ export async function downloadViaFtpFromDevice(
 ): Promise<Buffer> {
   const client = new FtpClient(20_000);
   const chunks: Buffer[] = [];
+  const host = await resolveMikrotikHost(credentials.host);
 
   try {
     await client.access({
-      host: credentials.host,
+      host,
       user: credentials.username,
       password: credentials.password,
       secure: false,
