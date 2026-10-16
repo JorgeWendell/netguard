@@ -24,10 +24,17 @@ export type CollectDeviceDataOptions = {
   checkUpdates?: boolean;
 };
 
-/**
- * Pipeline por equipamento (uma sessão):
- * connect → system → interfaces → services → wans → pppoe → queues → disconnect
- */
+async function safeCollect<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fallback;
+  }
+}
+
 export async function collectDeviceData(
   credentials: MikrotikDeviceCredentials,
   options: CollectDeviceDataOptions = {},
@@ -38,24 +45,38 @@ export async function collectDeviceData(
   try {
     session = await connect(credentials);
 
-    const system = await fetchSystemData(session);
-    const interfaces = await fetchInterfaceList(session);
+    const system = await safeCollect(() => fetchSystemData(session!), {});
+    const interfaces = await safeCollect(
+      () => fetchInterfaceList(session!),
+      [],
+    );
     const traffic = trafficFromInterfaces(interfaces);
-    const services = await fetchServiceList(session);
-    const wans = await fetchWanList(session);
-    const activeUsers = await fetchActiveSessionCount(session);
-    const queueCount = await fetchQueueCount(session);
+    const services = await safeCollect(() => fetchServiceList(session!), []);
+    const wans = await safeCollect(() => fetchWanList(session!), []);
+    const activeUsers = await safeCollect(
+      () => fetchActiveSessionCount(session!),
+      undefined,
+    );
+    const queueCount = await safeCollect(
+      () => fetchQueueCount(session!),
+      undefined,
+    );
 
     let routerOsUpdatePending = false;
     let routerboardUpdatePending = false;
 
     if (options.checkUpdates) {
       const [packageUpdate, routerboard] = await Promise.all([
-        fetchPackageUpdateInfo(session),
-        fetchRouterboardInfo(session),
+        safeCollect(() => fetchPackageUpdateInfo(session!), null),
+        safeCollect(() => fetchRouterboardInfo(session!), null),
       ]);
-      routerOsUpdatePending = hasRouterOsUpdateAvailable(packageUpdate);
-      routerboardUpdatePending = hasRouterboardUpgradeAvailable(routerboard);
+      if (packageUpdate) {
+        routerOsUpdatePending = hasRouterOsUpdateAvailable(packageUpdate);
+      }
+      if (routerboard) {
+        routerboardUpdatePending =
+          hasRouterboardUpgradeAvailable(routerboard);
+      }
     }
 
     return {
@@ -74,7 +95,9 @@ export async function collectDeviceData(
     };
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Falha ao conectar no equipamento";
+      error instanceof Error
+        ? error.message
+        : "Falha ao conectar no equipamento";
 
     return {
       online: false,

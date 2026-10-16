@@ -4,32 +4,53 @@ import { RouterOSAPI } from "node-routeros";
 
 import type { MikrotikDeviceCredentials, MikrotikSession } from "./types";
 
-const CONNECTION_TIMEOUT = 15;
-
-/** DNS públicos — evita EAI_AGAIN do getaddrinfo no Alpine/Docker com *.mynetname.net */
+const CONNECTION_TIMEOUT = 20;
+const CONNECT_RETRIES = 3;
+const DNS_CACHE_TTL_MS = 5 * 60 * 1000;
 const PUBLIC_DNS_SERVERS = ["8.8.8.8", "1.1.1.1", "8.8.4.4"];
 
 const publicResolver = new Resolver();
 publicResolver.setServers(PUBLIC_DNS_SERVERS);
 
-/**
- * Resolve hostname MikroTik (Cloud DDNS) para IPv4 sem usar o DNS embutido
- * do Docker/musl, que falha com getaddrinfo EAI_AGAIN no Node.
- * IPs literais e falhas de DNS mantêm o host original.
- */
+type DnsCacheEntry = {
+  ip: string;
+  expiresAt: number;
+};
+
+const dnsCache = new Map<string, DnsCacheEntry>();
+const lastGoodIp = new Map<string, string>();
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function resolveMikrotikHost(host: string): Promise<string> {
   const trimmed = host.trim();
   if (!trimmed || isIP(trimmed)) {
     return trimmed;
   }
 
+  const cached = dnsCache.get(trimmed);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.ip;
+  }
+
   try {
     const addresses = await publicResolver.resolve4(trimmed);
-    if (addresses[0]) {
-      return addresses[0];
+    const ip = addresses[0];
+    if (ip) {
+      dnsCache.set(trimmed, {
+        ip,
+        expiresAt: Date.now() + DNS_CACHE_TTL_MS,
+      });
+      lastGoodIp.set(trimmed, ip);
+      return ip;
     }
   } catch {
-    // mantém hostname — node-routeros tenta de novo
+    const previous = lastGoodIp.get(trimmed);
+    if (previous) {
+      return previous;
+    }
   }
 
   return trimmed;
@@ -39,22 +60,43 @@ export async function connect(
   credentials: MikrotikDeviceCredentials,
   timeoutSeconds = CONNECTION_TIMEOUT,
 ): Promise<MikrotikSession> {
-  const host = await resolveMikrotikHost(credentials.host);
+  let lastError: unknown;
 
-  const session = new RouterOSAPI({
-    host,
-    user: credentials.username,
-    password: credentials.password,
-    port: credentials.apiPort,
-    timeout: timeoutSeconds,
-    keepalive: false,
-    ...(credentials.apiSsl
-      ? { tls: { rejectUnauthorized: false } }
-      : {}),
-  });
+  for (let attempt = 1; attempt <= CONNECT_RETRIES; attempt++) {
+    const host = await resolveMikrotikHost(credentials.host);
 
-  await session.connect();
-  return session;
+    const session = new RouterOSAPI({
+      host,
+      user: credentials.username,
+      password: credentials.password,
+      port: credentials.apiPort,
+      timeout: timeoutSeconds,
+      keepalive: false,
+      ...(credentials.apiSsl
+        ? { tls: { rejectUnauthorized: false } }
+        : {}),
+    });
+
+    try {
+      await session.connect();
+      return session;
+    } catch (error) {
+      lastError = error;
+      try {
+        session.close();
+      } catch {
+        // ignore
+      }
+
+      if (attempt < CONNECT_RETRIES) {
+        await sleep(800 * attempt);
+      }
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Falha ao conectar no equipamento");
 }
 
 export function disconnect(session: MikrotikSession): void {

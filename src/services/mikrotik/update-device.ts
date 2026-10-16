@@ -15,6 +15,12 @@ import {
 import { collectDeviceData } from "./collect";
 import type { UpdateDeviceOptions } from "./types";
 
+const OFFLINE_STRIKES_REQUIRED = Number(
+  process.env.MIKROTIK_OFFLINE_STRIKES ?? 3,
+);
+
+const offlineStrikes = new Map<string, number>();
+
 type DeviceRow = {
   id: string;
   name: string;
@@ -80,17 +86,31 @@ export async function updateMikrotikDevice(
     checkUpdates: recordMetrics,
   });
 
+  let effectiveOnline = result.online;
+
   if (result.online) {
+    offlineStrikes.set(deviceId, 0);
     await persistOnlineDeviceData(deviceId, result, { recordMetrics });
   } else {
-    await persistOfflineDeviceData(deviceId, result);
+    const strikes = (offlineStrikes.get(deviceId) ?? 0) + 1;
+    offlineStrikes.set(deviceId, strikes);
+
+    if (strikes >= OFFLINE_STRIKES_REQUIRED || !previousOnline) {
+      await persistOfflineDeviceData(deviceId, result);
+      effectiveOnline = false;
+    } else {
+      effectiveOnline = previousOnline;
+      console.warn(
+        `[MikroTik] ${device.name}: falha ${strikes}/${OFFLINE_STRIKES_REQUIRED} — mantendo online (${result.error ?? "sem detalhe"})`,
+      );
+    }
   }
 
   try {
     await recordAvailabilityEventIfChanged(
       deviceId,
       previousOnline,
-      result.online,
+      effectiveOnline,
       device.name,
     );
   } catch (error) {
@@ -104,13 +124,13 @@ export async function updateMikrotikDevice(
     type: "stats_updated",
     source: "device_update",
     deviceId,
-    online: result.online,
+    online: effectiveOnline,
   });
 
   if (!result.online) {
     return {
       success: false,
-      online: false,
+      online: effectiveOnline,
       latencyMs: result.latencyMs,
       error: result.error ?? "Não foi possível conectar ao equipamento",
     };
